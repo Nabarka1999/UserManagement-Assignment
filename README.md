@@ -44,4 +44,11 @@ A simple yet effective system for managing user details, including the ability t
 1. In the frontend directory, make sure the API endpoint URL matches the backend API. You may need to adjust the `apiUrl` if the backend server is running on a different port or domain.
 
 
+## Improvements with More Time:
+- **React Components**: Utilizing React's component-based structure to create reusable, maintainable, and scalable UI components, improving code clarity and collaboration.
+- **Authentication & Authorization**: Implementing user login and role-based access control to restrict actions (such as editing or deleting users).
+- **Performance Optimizations**: Implementing server-side pagination and caching to improve performance for larger datasets.
+
+
+
 
