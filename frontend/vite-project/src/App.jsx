@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const apiUrl = 'http://localhost:5000/api/users';
+const apiUrl = 'https://jsonplaceholder.typicode.com/users';
 
 function App() {
   const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState({ firstName: '', lastName: '', email: '', department: '' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', username: '', company: { name: '' } });
   const [editingUser, setEditingUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,38 +22,26 @@ function App() {
     }
   };
 
-  // Add User
-  const addUser = async () => {
-    try {
-      await axios.post(apiUrl, newUser);
-      fetchUsers();
-      setNewUser({ firstName: '', lastName: '', email: '', department: '' });
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error adding user:', error);
-    }
+  // Simulate Add User
+  const addUser = () => {
+    const fakeUser = { id: users.length + 1, ...newUser };
+    setUsers((prev) => [...prev, fakeUser]);
+    setNewUser({ name: '', email: '', username: '', company: { name: '' } });
+    setIsModalOpen(false);
   };
 
-  // Edit User
-  const editUser = async () => {
-    try {
-      await axios.put(`${apiUrl}/${editingUser.userid}`, editingUser);
-      fetchUsers();
-      setEditingUser(null);
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error editing user:', error);
-    }
+  // Simulate Edit User
+  const editUser = () => {
+    setUsers((prev) =>
+      prev.map((user) => (user.id === editingUser.id ? editingUser : user))
+    );
+    setEditingUser(null);
+    setIsModalOpen(false);
   };
 
-  // Delete User
-  const deleteUser = async (userid) => {
-    try {
-      await axios.delete(`${apiUrl}/${userid}`);
-      fetchUsers();
-    } catch (error) {
-      console.error('Error deleting user:', error);
-    }
+  // Simulate Delete User
+  const deleteUser = (id) => {
+    setUsers((prev) => prev.filter((user) => user.id !== id));
   };
 
   const handleInputChange = (e) => {
@@ -89,24 +77,24 @@ function App() {
         <thead>
           <tr>
             <th>ID</th>
-            <th>First Name</th>
-            <th>Last Name</th>
+            <th>Name</th>
+            <th>Username</th>
             <th>Email</th>
-            <th>Department</th>
+            <th>Company</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {currentUsers.map((user) => (
-            <tr key={user.userid}>
-              <td>{user.userid}</td>
-              <td>{user.firstName}</td>
-              <td>{user.lastName}</td>
+            <tr key={user.id}>
+              <td>{user.id}</td>
+              <td>{user.name}</td>
+              <td>{user.username}</td>
               <td>{user.email}</td>
-              <td>{user.department}</td>
+              <td>{user.company?.name}</td>
               <td>
                 <button onClick={() => { setEditingUser(user); setIsModalOpen(true); }} className="btn-edit">Edit</button>
-                <button onClick={() => deleteUser(user.userid)} className="btn-delete">Delete</button>
+                <button onClick={() => deleteUser(user.id)} className="btn-delete">Delete</button>
               </td>
             </tr>
           ))}
@@ -131,19 +119,19 @@ function App() {
           <div className="modal-content">
             <h2>{editingUser ? 'Edit User' : 'Add User'}</h2>
 
-            <label>First Name:</label>
+            <label>Name:</label>
             <input
               type="text"
-              name="firstName"
-              value={editingUser ? editingUser.firstName : newUser.firstName}
+              name="name"
+              value={editingUser ? editingUser.name : newUser.name}
               onChange={handleInputChange}
             />
 
-            <label>Last Name:</label>
+            <label>Username:</label>
             <input
               type="text"
-              name="lastName"
-              value={editingUser ? editingUser.lastName : newUser.lastName}
+              name="username"
+              value={editingUser ? editingUser.username : newUser.username}
               onChange={handleInputChange}
             />
 
@@ -155,12 +143,16 @@ function App() {
               onChange={handleInputChange}
             />
 
-            <label>Department:</label>
+            <label>Company:</label>
             <input
               type="text"
-              name="department"
-              value={editingUser ? editingUser.department : newUser.department}
-              onChange={handleInputChange}
+              name="company"
+              value={editingUser ? editingUser.company.name : newUser.company.name}
+              onChange={(e) =>
+                editingUser
+                  ? setEditingUser((prev) => ({ ...prev, company: { name: e.target.value } }))
+                  : setNewUser((prev) => ({ ...prev, company: { name: e.target.value } }))
+              }
             />
 
             <button onClick={editingUser ? editUser : addUser} className="btn-save">
@@ -177,3 +169,4 @@ function App() {
 }
 
 export default App;
+
