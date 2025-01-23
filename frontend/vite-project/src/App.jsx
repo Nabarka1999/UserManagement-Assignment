@@ -2,15 +2,16 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const apiUrl = 'https://jsonplaceholder.typicode.com/users';
+const apiUrl = 'https://userm-backend.onrender.com/api/users';
 
 function App() {
   const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState({ name: '', email: '', username: '', company: { name: '' } });
+  const [newUser, setNewUser] = useState({ firstName: '', lastName: '', email: '', department: '' });
   const [editingUser, setEditingUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(10);
+  const [error, setError] = useState('');
 
   // Fetch Users
   const fetchUsers = async () => {
@@ -22,30 +23,52 @@ function App() {
     }
   };
 
-  // Simulate Add User
-  const addUser = () => {
-    const fakeUser = { id: users.length + 1, ...newUser };
-    setUsers((prev) => [...prev, fakeUser]);
-    setNewUser({ name: '', email: '', username: '', company: { name: '' } });
-    setIsModalOpen(false);
+  // Add User
+  const addUser = async () => {
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUser.email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      await axios.post(apiUrl, newUser);
+      fetchUsers();
+      setNewUser({ firstName: '', lastName: '', email: '', department: '' });
+      setIsModalOpen(false);
+      setError('');
+    } catch (error) {
+      console.error('Error adding user:', error);
+      setError('Failed to add user. Please try again.');
+    }
   };
 
-  // Simulate Edit User
-  const editUser = () => {
-    setUsers((prev) =>
-      prev.map((user) => (user.id === editingUser.id ? editingUser : user))
-    );
-    setEditingUser(null);
-    setIsModalOpen(false);
+  // Edit User
+  const editUser = async () => {
+    try {
+      await axios.put(`${apiUrl}/${editingUser.userid}`, editingUser);
+      fetchUsers();
+      setEditingUser(null);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error editing user:', error);
+    }
   };
 
-  // Simulate Delete User
-  const deleteUser = (id) => {
-    setUsers((prev) => prev.filter((user) => user.id !== id));
+  // Delete User
+  const deleteUser = async (userid) => {
+    try {
+      await axios.delete(`${apiUrl}/${userid}`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     if (editingUser) {
       setEditingUser((prev) => ({ ...prev, [name]: value }));
     } else {
@@ -77,24 +100,24 @@ function App() {
         <thead>
           <tr>
             <th>ID</th>
-            <th>Name</th>
-            <th>Username</th>
+            <th>First Name</th>
+            <th>Last Name</th>
             <th>Email</th>
-            <th>Company</th>
+            <th>Department</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {currentUsers.map((user) => (
-            <tr key={user.id}>
-              <td>{user.id}</td>
-              <td>{user.name}</td>
-              <td>{user.username}</td>
+            <tr key={user.userid}>
+              <td>{user.userid}</td>
+              <td>{user.firstName}</td>
+              <td>{user.lastName}</td>
               <td>{user.email}</td>
-              <td>{user.company?.name}</td>
+              <td>{user.department}</td>
               <td>
                 <button onClick={() => { setEditingUser(user); setIsModalOpen(true); }} className="btn-edit">Edit</button>
-                <button onClick={() => deleteUser(user.id)} className="btn-delete">Delete</button>
+                <button onClick={() => deleteUser(user.userid)} className="btn-delete">Delete</button>
               </td>
             </tr>
           ))}
@@ -119,19 +142,21 @@ function App() {
           <div className="modal-content">
             <h2>{editingUser ? 'Edit User' : 'Add User'}</h2>
 
-            <label>Name:</label>
+            {error && <p className="error-message">{error}</p>}
+
+            <label>First Name:</label>
             <input
               type="text"
-              name="name"
-              value={editingUser ? editingUser.name : newUser.name}
+              name="firstName"
+              value={editingUser ? editingUser.firstName : newUser.firstName}
               onChange={handleInputChange}
             />
 
-            <label>Username:</label>
+            <label>Last Name:</label>
             <input
               type="text"
-              name="username"
-              value={editingUser ? editingUser.username : newUser.username}
+              name="lastName"
+              value={editingUser ? editingUser.lastName : newUser.lastName}
               onChange={handleInputChange}
             />
 
@@ -143,16 +168,12 @@ function App() {
               onChange={handleInputChange}
             />
 
-            <label>Company:</label>
+            <label>Department:</label>
             <input
               type="text"
-              name="company"
-              value={editingUser ? editingUser.company.name : newUser.company.name}
-              onChange={(e) =>
-                editingUser
-                  ? setEditingUser((prev) => ({ ...prev, company: { name: e.target.value } }))
-                  : setNewUser((prev) => ({ ...prev, company: { name: e.target.value } }))
-              }
+              name="department"
+              value={editingUser ? editingUser.department : newUser.department}
+              onChange={handleInputChange}
             />
 
             <button onClick={editingUser ? editUser : addUser} className="btn-save">
@@ -169,4 +190,3 @@ function App() {
 }
 
 export default App;
-
